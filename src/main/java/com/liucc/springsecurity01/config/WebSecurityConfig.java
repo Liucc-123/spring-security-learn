@@ -20,21 +20,32 @@ public class WebSecurityConfig {
         //authorizeRequests()：开启授权保护
         //anyRequest()：对所有请求开启授权保护
         //authenticated()：已认证请求会自动被授权
-        http
-                .authorizeRequests(authorize -> authorize.anyRequest().authenticated())
+        http.authorizeRequests(authorize -> authorize.anyRequest().authenticated());
 //                .formLogin(withDefaults());//表单授权方式
-                .formLogin(form -> {
-                    form.loginPage("/login").permitAll() //登录页面无需授权即可访问
-                            .usernameParameter("username") //自定义表单用户名参数，默认是username
-                            .passwordParameter("password") //自定义表单密码参数，默认是password
-                            .failureUrl("/login?error"); //登录失败的返回地址
-                });
+        http.formLogin(form -> {
+            form.loginPage("/login").permitAll() //登录页面无需授权即可访问
+                    .usernameParameter("username") //自定义表单用户名参数，默认是username
+                    .passwordParameter("password") //自定义表单密码参数，默认是password
+                    .failureUrl("/login?error")//登录失败的返回地址
+                    .successHandler(new MyAuthenticationSuccessHandler()) //注册自定义的认证成功处理器
+                    .failureHandler(new MyAuthenticationFailureHandler())//注册自定义的认证失败处理器
+            ;
+        });
 //                .httpBasic(withDefaults());// 浏览器基本授权方式
+        // 登出管理
+        http.logout(logout -> {
+            logout.logoutSuccessHandler(new MyLogoutSuccessHandler());
+        });
+
+        // 会话管理
+        http.sessionManagement(session ->{
+            session.maximumSessions(1).expiredSessionStrategy(new MySessionInformationExpiredStrategy());
+        });
 
         //关闭csrf攻击防御
-//        http.csrf((csrf) -> {
-//            csrf.disable();
-//        });
+        http.csrf((csrf) -> {
+            csrf.disable();
+        });
 
         return http.build();
     }
