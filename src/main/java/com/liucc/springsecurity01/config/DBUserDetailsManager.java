@@ -30,22 +30,34 @@ public class DBUserDetailsManager implements UserDetailsManager, UserDetailsPass
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", username);
         User user = userMapper.selectOne(queryWrapper);
         if (user == null) {
             throw new UsernameNotFoundException(username);
         } else {
-            Collection<GrantedAuthority> authorities = new ArrayList<>();
-            return new org.springframework.security.core.userdetails.User(
-                    user.getUsername(),
-                    user.getPassword(),
-                    user.getEnabled(),
-                    true, //用户账号是否过期
-                    true, //用户凭证是否过期
-                    true, //用户是否未被锁定
-                    authorities); //权限列表
+            // 1、给用户进行资源授权
+//            Collection<GrantedAuthority> authorities = new ArrayList<>();
+//            authorities.add(()->"USER_LIST");
+//            authorities.add(()->"USER_ADD");
+//            return new org.springframework.security.core.userdetails.User(
+//                    user.getUsername(),
+//                    user.getPassword(),
+//                    user.getEnabled(),
+//                    true, //用户账号是否过期
+//                    true, //用户凭证是否过期
+//                    true, //用户是否未被锁定
+//
+////                    authorities) //权限列表
+//                    ;
+            return org.springframework.security.core.userdetails.User
+                    .withUsername(user.getUsername())
+                    .password(user.getPassword())
+                    // 1、给用户配置资源权限
+//                    .authorities(authorities)
+                    // 2、给用户配置管理员角色
+                    .roles("ADMIN")
+                    .build();
         }
     }
 
